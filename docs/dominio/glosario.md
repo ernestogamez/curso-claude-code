@@ -14,6 +14,7 @@ Terminología del dominio y conceptos técnicos utilizados en el proyecto Restte
 | **Employee** | Persona que trabaja en el sistema. Tiene un rol y puede estar asignada a un restaurante. |
 | **Dish** | Plato de la carta de un restaurante. Tiene nombre, descripción, precio, categoría y puede estar disponible o no. |
 | **Ingredient** | Ingrediente utilizado en los platos. Tiene nombre, unidad de medida y stock actual. Pertenece a un restaurante. |
+| **Table** | Mesa de un restaurante. Tiene número (único por restaurante), descripción, capacidad y estado (`libre`, `ocupada`, `reservada`). |
 | **DishIngredient** | Relación entre un plato y un ingrediente, con la cantidad necesaria. |
 | **Order** | Pedido realizado por un cliente. Contiene ítems (platos) y está asociado a un restaurante. |
 | **OrderItem** | Línea de un pedido: un plato con cantidad, notas opcionales y estado. |
@@ -43,6 +44,16 @@ El valor almacenado es `manager`; "gerente" es solo su traducción en la interfa
 | **preparando** | Ítem siendo preparado en cocina. | cocinero |
 | **listo** | Ítem preparado, listo para servir. | cocinero |
 | **entregado** | Ítem entregado al cliente. Desaparece de las vistas activas. | camarero |
+
+### Estados de Mesa
+
+| Estado | Descripción | Quién lo cambia |
+| --- | --- | --- |
+| **libre** | Mesa disponible. Es el único estado desde el que un cliente puede ocuparla. | admin, manager, camarero |
+| **ocupada** | Mesa en uso. Los pedidos con mesa exigen este estado. | cliente (al ocuparla) y personal |
+| **reservada** | Mesa apartada. Es solo un estado, sin fecha ni hora; el cliente no puede ocuparla. | admin, manager, camarero |
+
+La mesa no se libera sola al entregar el pedido: el personal la pasa a `libre` manualmente.
 
 ### Categorías de Platos
 

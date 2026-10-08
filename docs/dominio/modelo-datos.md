@@ -11,6 +11,7 @@ erDiagram
     restaurants ||--o{ employees : "tiene"
     restaurants ||--o{ ingredients : "tiene"
     restaurants ||--o{ dishes : "tiene"
+    restaurants ||--o{ tables : "tiene"
     restaurants ||--o{ orders : "tiene"
     dishes ||--o{ dish_ingredients : "contiene"
     ingredients ||--o{ dish_ingredients : "usado en"
@@ -66,6 +67,17 @@ erDiagram
         TEXT dish_id PK_FK
         TEXT ingredient_id PK_FK
         REAL quantity
+    }
+
+    tables {
+        TEXT id PK
+        INTEGER number
+        TEXT description
+        INTEGER capacity
+        TEXT status
+        TEXT restaurant_id FK
+        TEXT created_at
+        TEXT updated_at
     }
 
     orders {
@@ -182,6 +194,28 @@ Relación muchos-a-muchos entre platos e ingredientes.
 
 ---
 
+### `tables`
+
+Mesas de cada restaurante.
+
+| Columna | Tipo | Nullable | Descripción |
+| --- | --- | --- | --- |
+| `id` | TEXT | No | UUID, clave primaria |
+| `number` | INTEGER | No | Número de mesa visible para el personal y los clientes (entero ≥ 1) |
+| `description` | TEXT | No | Descripción o ubicación (default: cadena vacía) |
+| `capacity` | INTEGER | No | Comensales máximos (entero ≥ 1) |
+| `status` | TEXT | No | Estado: libre, ocupada, reservada (default: libre) |
+| `restaurant_id` | TEXT | No | FK → `restaurants.id` |
+| `created_at` | TEXT | No | Fecha de creación |
+| `updated_at` | TEXT | No | Fecha de última actualización |
+
+**Restricciones:**
+
+- `UNIQUE(restaurant_id, number)`: no hay dos mesas con el mismo número en un restaurante.
+- `reservada` es solo un estado, no hay reservas con fecha y hora.
+
+---
+
 ### `orders`
 
 Pedidos de los clientes.
@@ -190,7 +224,7 @@ Pedidos de los clientes.
 | --- | --- | --- | --- |
 | `id` | TEXT | No | UUID, clave primaria |
 | `restaurant_id` | TEXT | No | FK → `restaurants.id` |
-| `table_id` | TEXT | Sí | Identificador de mesa (opcional) |
+| `table_id` | TEXT | Sí | Mesa del pedido (opcional). Referencia lógica a `tables.id`, **sin FK**: borrar una mesa no borra sus pedidos, que pasan a devolver `tableNumber` nulo |
 | `client_id` | TEXT | Sí | ID del cliente (opcional) |
 | `created_at` | TEXT | No | Fecha de creación |
 
@@ -222,6 +256,7 @@ Líneas de pedido. Cada ítem es un plato con cantidad y estado.
 | Restaurant → Employees | 1:N | Un restaurante tiene muchos empleados |
 | Restaurant → Ingredients | 1:N | Un restaurante tiene muchos ingredientes |
 | Restaurant → Dishes | 1:N | Un restaurante tiene muchos platos |
+| Restaurant → Tables | 1:N | Un restaurante tiene muchas mesas |
 | Restaurant → Orders | 1:N | Un restaurante tiene muchos pedidos |
 | Dish ↔ Ingredient | N:M | Un plato usa varios ingredientes (via `dish_ingredients`) |
 | Order → OrderItems | 1:N | Un pedido tiene varios ítems |
@@ -231,7 +266,7 @@ Líneas de pedido. Cada ítem es un plato con cantidad y estado.
 
 ## Notas Técnicas
 
-- **IDs**: Todos son UUID v4 generados con `crypto.randomUUID()`. Excepción: el script de seed usa los identificadores fijos `rest-1` y `rest-2` para los restaurantes de prueba.
+- **IDs**: Todos son UUID v4 generados con `crypto.randomUUID()`. Excepción: el script de seed usa los identificadores fijos `rest-1` y `rest-2` para los restaurantes de prueba, y `table-<restaurantId>-<número>` para las mesas de prueba (6 en `rest-1`, 5 en `rest-2`).
 - **Fechas**: Almacenadas como TEXT en formato ISO 8601 (`new Date().toISOString()`).
 - **Booleanos**: SQLite no tiene tipo BOOLEAN; se usa INTEGER (0 = false, 1 = true).
 - **Nomenclatura**: las columnas son `snake_case` y las propiedades TypeScript `camelCase`. La conversión se hace con alias en el propio SQL (`owner_first_name as ownerFirstName`).
