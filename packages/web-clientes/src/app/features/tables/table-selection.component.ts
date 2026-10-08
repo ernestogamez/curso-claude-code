@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core'
-import { ActivatedRoute, RouterLink } from '@angular/router'
+import { ActivatedRoute, Router, RouterLink } from '@angular/router'
 import { FormsModule } from '@angular/forms'
+import { CartStore } from '../../core/store/cart.store'
 import { TableService } from '../../core/services/table.service'
 import { Table } from '../../core/models/table.model'
 
@@ -48,6 +49,13 @@ import { Table } from '../../core/models/table.model'
             </button>
           }
         </div>
+        @if (occupyError()) {
+          <div class="alert-error" style="margin-top: 16px;">{{ occupyError() }}</div>
+        }
+        <button class="btn btn-primary continue-btn" [disabled]="!selectedId() || occupying()"
+                (click)="continue()">
+          {{ occupying() ? 'Ocupando mesa...' : 'Continuar' }}
+        </button>
       }
     </div>
   `,
@@ -91,6 +99,9 @@ import { Table } from '../../core/models/table.model'
     .table-card.selected {
       background: var(--green-glow);
     }
+    .continue-btn {
+      margin-top: 24px;
+    }
     .table-card h3 {
       font-size: 16px;
       font-weight: 600;
@@ -109,7 +120,9 @@ import { Table } from '../../core/models/table.model'
 })
 export class TableSelectionComponent implements OnInit {
   private readonly route = inject(ActivatedRoute)
+  private readonly router = inject(Router)
   private readonly tableService = inject(TableService)
+  private readonly cartStore = inject(CartStore)
 
   private restaurantId = ''
 
@@ -119,6 +132,8 @@ export class TableSelectionComponent implements OnInit {
   readonly selectedId = signal<string | null>(null)
   readonly loading = signal(false)
   readonly error = signal<string | null>(null)
+  readonly occupying = signal(false)
+  readonly occupyError = signal<string | null>(null)
 
   ngOnInit(): void {
     this.restaurantId = this.route.snapshot.paramMap.get('id')!
@@ -127,7 +142,37 @@ export class TableSelectionComponent implements OnInit {
 
   onPartySizeChange(value: number | null): void {
     this.partySize.set(value)
+    this.occupyError.set(null)
     this.loadTables()
+  }
+
+  continue(): void {
+    const tableId = this.selectedId()
+    const size = this.partySize()
+    if (!tableId || size === null || this.occupying()) return
+
+    this.occupying.set(true)
+    this.occupyError.set(null)
+
+    this.tableService.occupy(this.restaurantId, tableId, size).subscribe({
+      next: (table) => {
+        this.cartStore.setTable(this.restaurantId, table.id, table.number)
+        this.occupying.set(false)
+        this.router.navigate(['/restaurants', this.restaurantId])
+      },
+      error: (err) => {
+        this.occupying.set(false)
+        if (err.status === 409) {
+          this.occupyError.set('Esa mesa ya no está disponible. Elige otra.')
+          this.selectedId.set(null)
+          this.loadTables()
+        } else if (err.status === 400) {
+          this.occupyError.set('La mesa no tiene capacidad suficiente para tu grupo.')
+        } else {
+          this.occupyError.set('No se pudo ocupar la mesa. Inténtalo de nuevo.')
+        }
+      }
+    })
   }
 
   private loadTables(): void {
