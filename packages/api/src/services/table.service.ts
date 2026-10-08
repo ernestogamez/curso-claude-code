@@ -134,7 +134,7 @@ export class TableService {
         }
     }
 
-    private buildTable(props: Table): Table {
+    private buildTable(props: Omit<Table, 'status'> & { status: string }): Table {
         if (!props.restaurantId || typeof props.restaurantId !== 'string' || props.restaurantId.trim() === '') {
             throw new RestaurantIdRequiredError()
         }

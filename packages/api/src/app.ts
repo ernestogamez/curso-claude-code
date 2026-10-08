@@ -5,6 +5,7 @@ import employeeRoutes from '@employee/infrastructure/http/employee.routes.js'
 import restaurantEmployeeRoutes from '@employee/infrastructure/http/restaurant-employee.routes.js'
 import restaurantRoutes from '@routes/restaurant.routes.js'
 import ingredientRoutes from '@routes/ingredient.routes.js'
+import tableRoutes from '@routes/table.routes.js'
 import dishRoutes from '@routes/dish.routes.js'
 import publicRestaurantRoutes from '@routes/restaurant.public.routes.js'
 import publicDishRoutes from '@routes/dish.public.routes.js'
@@ -23,6 +24,7 @@ app.use('/api/v1/public/restaurants', publicRestaurantRoutes)
 app.use('/api/v1/public/restaurants/:restaurantId/dishes', publicDishRoutes)
 app.use('/api/v1/restaurants', restaurantRoutes)
 app.use('/api/v1/restaurants/:restaurantId/ingredients', ingredientRoutes)
+app.use('/api/v1/restaurants/:restaurantId/tables', tableRoutes)
 app.use('/api/v1/restaurants/:restaurantId/dishes', dishRoutes)
 app.use('/api/v1/restaurants/:restaurantId/employees', restaurantEmployeeRoutes)
 
