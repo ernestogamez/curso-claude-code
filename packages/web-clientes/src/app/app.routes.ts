@@ -1,5 +1,13 @@
-import { Routes } from '@angular/router';
+import { CanActivateFn, Router, Routes } from '@angular/router';
+import { inject } from '@angular/core';
 import { LoginComponent, RegisterComponent, authGuard } from '@resttek/web-shared';
+import { CartStore } from './core/store/cart.store';
+
+const tableGuard: CanActivateFn = (route) => {
+  const id = route.paramMap.get('id')!;
+  if (inject(CartStore).tableFor(id)) return true;
+  return inject(Router).createUrlTree(['/restaurants', id, 'tables']);
+};
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -20,6 +28,7 @@ export const routes: Routes = [
       },
       {
         path: 'restaurants/:id',
+        canActivate: [tableGuard],
         loadComponent: () => import('./features/menu/restaurant-menu.component').then(m => m.RestaurantMenuComponent)
       },
       {
