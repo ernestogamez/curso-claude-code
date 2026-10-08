@@ -1,11 +1,13 @@
 ---
 name: new-feature
-description: Recibe el número de una issue de GitHub, la lee con gh, crea un git worktree aislado, redacta un plan por tareas pequeñas en docs/plans, lo publica como comentario de la issue, avisa por Slack (canal planes-generales), lo implementa con TDD estricto y vuelve a avisar por Slack. Úsala cuando se pida planificar o implementar una issue.
+description: Recibe el número de una issue de GitHub, la lee con gh, crea un git worktree aislado, redacta un plan por tareas pequeñas en docs/plans, lo publica como comentario de la issue, y avisa por Slack (canal planes-generales). Solo planifica, no implementa: la implementación la hace la skill implement-issue. Úsala cuando se pida planificar una issue.
 ---
 
 # new-feature
 
 Issue a planificar: $ARGUMENTS
+
+**Esta skill solo planifica. No escribe código de producción ni tests**: la implementación (TDD, commits) la realiza la skill `implement-issue` a partir del plan publicado en la issue.
 
 `$ARGUMENTS` debe ser el **número de la issue** del repositorio (por ejemplo `42` o `#42`). Si está vacío o no es un número, pide el número al usuario antes de continuar.
 
@@ -18,8 +20,9 @@ Issue a planificar: $ARGUMENTS
 
 ## Reglas generales
 
-- **Todos los cambios se hacen dentro del worktree** creado en el paso 1 (rutas absolutas o `git -C`/`cd` al worktree). Nunca edites ficheros en el checkout principal, ni el plan ni el código.
-- El código y los tests se escriben en inglés; el plan, los mensajes de Slack y los mensajes al usuario, en español.
+- **El plan se guarda dentro del worktree** creado en el paso 1 (rutas absolutas o `git -C`/`cd` al worktree). Nunca edites ficheros en el checkout principal.
+- No modifiques código ni tests: lo único que se crea es el fichero del plan.
+- El plan, los mensajes de Slack y los mensajes al usuario, en español.
 - No hagas commit ni push salvo que el usuario lo pida (para commits está la skill `commit`).
 
 ## 1. Crear el worktree
@@ -32,8 +35,6 @@ Issue a planificar: $ARGUMENTS
 6. Crea el worktree: `git worktree add -b <tipo>/<descripcion> .claude/worktrees/<tipo>-<descripcion> <base>`.
    - Si la rama o el directorio ya existen, avisa al usuario en lugar de sobrescribirlos.
    - Los cambios sin commitear del checkout principal no pasan al worktree; no los descartes ni los muevas.
-7. Instala dependencias en el worktree: `npm install` (desde su raíz).
-8. Comprueba la línea base: `npm test` en el worktree debe estar en verde antes de empezar. Si falla, díselo al usuario.
 
 ## 2. Crear el plan
 
@@ -68,30 +69,8 @@ Después, avisa en el canal **`planes-generales`** con las herramientas del MCP 
    Termina siempre el mensaje con la firma `-- Ernesto` en una línea aparte.
 3. Si el canal no existe o las herramientas de Slack no están disponibles (faltan `BOT_SLACK_TOKEN`/`TEAMID_SLACK`), dilo al usuario y continúa; no inventes que se ha enviado.
 
-Después muestra el plan al usuario y **espera su confirmación** antes de implementar.
+Después muestra el plan al usuario. No lo implementes: para ello, el usuario invocará `implement-issue <numero>`.
 
-## 3. Implementar con TDD estricto
+## 3. Cierre
 
-Dentro del worktree, para **cada** tarea, en orden, sigue el ciclo completo sin saltarte ningún paso:
-
-1. **Red**: escribe primero el test que describe el comportamiento esperado. Ejecútalo y comprueba que **falla** por el motivo correcto. Si pasa sin código nuevo, el test no sirve: corrígelo.
-2. **Green**: escribe el mínimo código de producción necesario para que el test pase. Nada más.
-3. **Refactor**: limpia el código y los tests manteniendo todo en verde.
-4. Ejecuta la **suite completa** (`npm test`) y comprueba que todo pasa.
-5. Marca la tarea en el plan (`- [ ]` → `- [x]`) **inmediatamente**, antes de empezar la siguiente.
-
-Notas:
-
-- No escribas código de producción sin un test en rojo que lo justifique.
-- No avances a la siguiente tarea si la suite no está en verde.
-- Los tests conviven junto al código (`*.test.ts`). En `contexts/employee` usa los mocks de `application/mocks/`.
-- Los tests no deben tocar `packages/api/resttek.db`: usa una base temporal o `:memory:`.
-
-## 4. Cierre
-
-1. Ejecuta la suite completa una última vez (`npm test` en el worktree) y, si se tocó un frontend, su build (`npm run build -w @resttek/<paquete>`).
-2. Avisa de nuevo en **`planes-generales`** con `slack_post_message`: issue, rama, tareas completadas (`X/N`), resultado de la suite y ruta del worktree. Ejemplo:
-   `✅ Implementación terminada: #<numero> <título> · rama <tipo>/<descripcion> · <N>/<N> tareas · tests en verde · .claude/worktrees/<tipo>-<descripcion>`
-   Termina siempre el mensaje con la firma `-- Ernesto` en una línea aparte.
-   Si algo quedó sin completar o los tests fallan, dilo en el mensaje (no marques como terminado lo que no lo está).
-3. Resume al usuario qué se ha hecho e indica la ruta del worktree y la rama. No hagas commit, push ni borres el worktree salvo que lo pida.
+Resume al usuario: issue, rama, ruta del worktree y del plan, nº de tareas y enlace al comentario. Indícale que, para implementarlo, use la skill `implement-issue <numero>`. No hagas commit, push ni borres el worktree salvo que lo pida.
