@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import type { Table } from '@models/table.model.js'
 import { normalizeTableStatus } from '@models/table.model.js'
-import type { TableRepository } from '@repositories/table.repository.js'
+import type { TableRepository, TableFilters } from '@repositories/table.repository.js'
 import {
     TableNotFoundError,
     TableNumberRequiredError,
@@ -23,6 +23,11 @@ export interface UpdateTableDTO {
     description: string
     capacity: number
     status: string
+}
+
+export interface TableListFilters {
+    status?: string
+    minCapacity?: string | number
 }
 
 export class TableService {
@@ -61,6 +66,32 @@ export class TableService {
         })
 
         await this.assertNumberAvailable(updated.restaurantId, updated.number, updated.id)
+        await this.tableRepository.save(updated)
+        return updated
+    }
+
+    async list(restaurantId: string, filters: TableListFilters = {}): Promise<Table[]> {
+        const repositoryFilters: TableFilters = {}
+        if (filters.status !== undefined) {
+            repositoryFilters.status = normalizeTableStatus(filters.status)
+        }
+        if (filters.minCapacity !== undefined) {
+            const minCapacity = Number(filters.minCapacity)
+            if (!Number.isInteger(minCapacity) || minCapacity < 1) {
+                throw new InvalidTableCapacityError('minCapacity must be an integer greater than or equal to 1')
+            }
+            repositoryFilters.minCapacity = minCapacity
+        }
+        return this.tableRepository.findByRestaurant(restaurantId, repositoryFilters)
+    }
+
+    async changeStatus(id: string, status: string): Promise<Table> {
+        const existing = await this.getById(id)
+        const updated: Table = {
+            ...existing,
+            status: normalizeTableStatus(status),
+            updatedAt: new Date().toISOString()
+        }
         await this.tableRepository.save(updated)
         return updated
     }
