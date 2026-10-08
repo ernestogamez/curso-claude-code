@@ -1,9 +1,15 @@
 {
-  "enabledMcpjsonServers": ["slack"],
-  "permissions": {
-    "allow": [
-      "mcp__slack__slack_list_channels",
-      "mcp__slack__slack_post_message"
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block_constants_read.sh"
+          }
+        ]
+      }
     ]
   }
 }
