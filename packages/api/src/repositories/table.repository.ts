@@ -23,6 +23,7 @@ export interface TableRepository {
     findByRestaurant(restaurantId: string, filters?: TableFilters): Promise<Table[]>
     save(table: Table): Promise<void>
     delete(id: string): Promise<void>
+    occupyIfFree(id: string): Promise<boolean>
 }
 
 const SELECT_COLUMNS = 'id, number, description, capacity, status, restaurant_id as restaurantId, created_at as createdAt, updated_at as updatedAt'
@@ -76,6 +77,14 @@ export class SqliteTableRepository implements TableRepository {
 
     async delete(id: string): Promise<void> {
         await this.db.run('DELETE FROM tables WHERE id = ?', [id])
+    }
+
+    async occupyIfFree(id: string): Promise<boolean> {
+        const result = await this.db.run(
+            "UPDATE tables SET status = 'ocupada', updated_at = ? WHERE id = ? AND status = 'libre'",
+            [new Date().toISOString(), id]
+        )
+        return result.changes > 0
     }
 
     private mapToTable(row: TableRow): Table {
