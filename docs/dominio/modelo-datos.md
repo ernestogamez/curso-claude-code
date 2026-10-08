@@ -35,6 +35,7 @@ erDiagram
         TEXT first_name
         TEXT last_name
         TEXT email UK
+        TEXT phone UK
         TEXT password_hash
         TEXT role
         TEXT restaurant_id FK
@@ -119,6 +120,7 @@ Almacena **todos** los usuarios del sistema, incluidos los clientes: no hay tabl
 | `first_name` | TEXT | No | Nombre |
 | `last_name` | TEXT | No | Apellido |
 | `email` | TEXT | No | Email (único) |
+| `phone` | TEXT | Sí | Teléfono normalizado, sin espacios (único si existe). Permite iniciar sesión con teléfono |
 | `password_hash` | TEXT | No | Hash bcrypt de la contraseña |
 | `role` | TEXT | No | Rol: admin, manager, camarero, cocinero, cliente |
 | `restaurant_id` | TEXT | Sí | FK → `restaurants.id` (null para admin y cliente) |
@@ -126,6 +128,7 @@ Almacena **todos** los usuarios del sistema, incluidos los clientes: no hay tabl
 **Restricciones:**
 
 - `email` es UNIQUE.
+- `phone` tiene un índice único parcial (`WHERE phone IS NOT NULL`), así que varias filas pueden no tener teléfono. Se añade con una migración `ALTER TABLE` idempotente al arrancar, por lo que las BDs existentes conservan sus datos con `phone = NULL`.
 - `restaurant_id` es FK a `restaurants.id`.
 
 ---

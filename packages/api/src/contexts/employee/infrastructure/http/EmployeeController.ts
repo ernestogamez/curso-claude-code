@@ -11,11 +11,12 @@ export class EmployeeController {
 
     createEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { firstName, lastName, email, password, role, restaurantId } = req.body
+            const { firstName, lastName, email, phone, password, role, restaurantId } = req.body
             const employee = await this.createEmployeeUseCase.execute({
                 firstName,
                 lastName,
                 email,
+                phone,
                 passwordPlain: password,
                 role,
                 restaurantId: restaurantId ?? null
@@ -25,6 +26,7 @@ export class EmployeeController {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
                 email: employee.email,
+                phone: employee.phone,
                 role: employee.role,
                 restaurantId: employee.restaurantId
             })
@@ -45,6 +47,7 @@ export class EmployeeController {
                 firstName: e.firstName,
                 lastName: e.lastName,
                 email: e.email,
+                phone: e.phone,
                 role: e.role,
                 restaurantId: e.restaurantId
             })))
@@ -64,6 +67,7 @@ export class EmployeeController {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
                 email: employee.email,
+                phone: employee.phone,
                 role: employee.role,
                 restaurantId: employee.restaurantId
             })
@@ -81,6 +85,7 @@ export class EmployeeController {
                 firstName: e.firstName,
                 lastName: e.lastName,
                 email: e.email,
+                phone: e.phone,
                 role: e.role,
                 restaurantId: e.restaurantId
             })))

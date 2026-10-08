@@ -106,6 +106,7 @@ export class Database {
                 first_name TEXT NOT NULL,
                 last_name TEXT NOT NULL,
                 email TEXT NOT NULL UNIQUE,
+                phone TEXT,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL,
                 restaurant_id TEXT,
@@ -169,6 +170,18 @@ export class Database {
         for (const q of queries) {
             if (q.trim()) await this.run(q)
         }
+
+        await this.migrateEmployeePhone()
+    }
+
+    private async migrateEmployeePhone(): Promise<void> {
+        const columns = await this.all<{ name: string }>('PRAGMA table_info(employees)')
+        if (!columns.some(column => column.name === 'phone')) {
+            await this.run('ALTER TABLE employees ADD COLUMN phone TEXT')
+        }
+        await this.run(
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_employees_phone ON employees(phone) WHERE phone IS NOT NULL'
+        )
     }
 }
 

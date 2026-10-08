@@ -12,6 +12,7 @@ export class AuthController {
         try {
             const result = await this.loginUseCase.execute({
                 email: req.body.email,
+                phone: req.body.phone,
                 passwordRaw: req.body.password
             })
             res.status(200).json(result)
@@ -29,6 +30,7 @@ export class AuthController {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 email: req.body.email,
+                phone: req.body.phone,
                 password: req.body.password
             })
             res.status(201).json(result)

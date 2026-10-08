@@ -108,11 +108,12 @@ export class Employee {
 
 ### Value Objects
 
-Solo existen **dos clases** Value Object:
+Solo existen **tres clases** Value Object:
 
 | Value Object | Ubicación | Validación |
 | --- | --- | --- |
 | `Email` | `contexts/shared/domain/value-objects/Email.ts` | Formato email (regex) |
+| `Phone` | `contexts/shared/domain/value-objects/Phone.ts` | Quita espacios; `+` opcional y 9-15 dígitos |
 | `Role` | `contexts/employee/domain/value-objects/Role.ts` | admin, manager, camarero, cocinero, cliente |
 
 Los demás conceptos que podrían ser Value Objects **no están implementados como clases**, sino como tipo unión + función de normalización en `models/`:
@@ -267,8 +268,8 @@ Todos cuelgan de `/api/v1`. La columna **Roles** indica qué valores de `req.use
 | Método | Ruta | Descripción |
 | --- | --- | --- |
 | `GET` | `/health` | Healthcheck. Devuelve `{ status: 'ok' }`. **No lleva el prefijo `/api/v1`** |
-| `POST` | `/api/v1/auth/login` | Login. Devuelve `{ token, employee }` |
-| `POST` | `/api/v1/auth/register` | Auto-registro de cliente. Devuelve `{ token, employee }` (201) |
+| `POST` | `/api/v1/auth/login` | Login con `{ email, password }` o `{ phone, password }` (si vienen ambos, manda `phone`). Devuelve `{ token, employee }`; credenciales o teléfono inválidos → 401 |
+| `POST` | `/api/v1/auth/register` | Auto-registro de cliente; `phone` opcional (único). Devuelve `{ token, employee }` (201) |
 | `GET` | `/api/v1/public/restaurants` | Listado de restaurantes para la app de clientes |
 | `GET` | `/api/v1/public/restaurants/:id` | Detalle de restaurante |
 | `GET` | `/api/v1/public/restaurants/:restaurantId/dishes` | Carta pública del restaurante |
@@ -288,7 +289,7 @@ Todos cuelgan de `/api/v1`. La columna **Roles** indica qué valores de `req.use
 
 | Método | Ruta | Roles |
 | --- | --- | --- |
-| `POST` | `/api/v1/employees` | admin |
+| `POST` | `/api/v1/employees` | admin — `phone` opcional (único) |
 | `GET` | `/api/v1/employees` | admin — acepta `?limit=`, `?offset=` y `?role=` |
 | `GET` | `/api/v1/employees/:id` | admin |
 | `GET` | `/api/v1/restaurants/:restaurantId/employees` | admin |

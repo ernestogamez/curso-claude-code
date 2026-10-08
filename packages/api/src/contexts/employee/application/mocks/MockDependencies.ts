@@ -18,6 +18,15 @@ export class MockEmployeeRepository implements IEmployeeRepository {
         return null
     }
 
+    async findByPhone(phone: string): Promise<Employee | null> {
+        for (const employee of this.employees.values()) {
+            if (employee.phone === phone) {
+                return employee
+            }
+        }
+        return null
+    }
+
     async findAll(limit: number = 10, offset: number = 0, role?: string): Promise<Employee[]> {
         let allEmployees = Array.from(this.employees.values())
         if (role) {
