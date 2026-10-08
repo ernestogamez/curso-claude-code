@@ -42,6 +42,12 @@ export class DuplicatedEmailError extends AppError {
   }
 }
 
+export class DuplicatedPhoneError extends AppError {
+  constructor() {
+    super('Phone is already in use')
+  }
+}
+
 export class EmployeeNotFoundError extends AppError {
   constructor() {
     super('Employee not found')

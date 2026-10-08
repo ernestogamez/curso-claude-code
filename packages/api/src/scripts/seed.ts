@@ -19,26 +19,27 @@ const seed = async () => {
                 firstName: 'Admin',
                 lastName: 'RestTek',
                 email: 'admin@resttek.com',
+                phone: '+34600000000',
                 passwordHash: await authService.hashPassword('admin@resttek.com'),
                 role: 'admin',
                 restaurantId: null
             })
             await employeeRepo.save(adminEmployee)
-            console.log('Admin created: admin@resttek.com / admin@resttek.com')
+            console.log('Admin created: admin@resttek.com (+34600000000) / admin@resttek.com')
         } else {
             console.log('Admin already exists.')
         }
 
         const employees = [
-            { firstName: 'Juan', lastName: 'García', email: 'cocinero1@resttek.com', role: 'cocinero', restaurantId: 'rest-1' },
-            { firstName: 'María', lastName: 'López', email: 'camarero1@resttek.com', role: 'camarero', restaurantId: 'rest-1' },
-            { firstName: 'Pedro', lastName: 'Martínez', email: 'camarero2@resttek.com', role: 'camarero', restaurantId: 'rest-1' },
-            { firstName: 'Roberto', lastName: 'Díaz', email: 'gerente1@resttek.com', role: 'manager', restaurantId: 'rest-1' },
-            { firstName: 'Carlos', lastName: 'Sánchez', email: 'cocinero2@resttek.com', role: 'cocinero', restaurantId: 'rest-2' },
-            { firstName: 'Ana', lastName: 'Fernández', email: 'camarero3@resttek.com', role: 'camarero', restaurantId: 'rest-2' },
-            { firstName: 'Sofia', lastName: 'Rossi', email: 'gerente2@resttek.com', role: 'manager', restaurantId: 'rest-2' },
-            { firstName: 'Laura', lastName: 'Gómez', email: 'cliente1@resttek.com', role: 'cliente', restaurantId: null },
-            { firstName: 'Pablo', lastName: 'Ruiz', email: 'cliente2@resttek.com', role: 'cliente', restaurantId: null },
+            { firstName: 'Juan', lastName: 'García', email: 'cocinero1@resttek.com', phone: '+34600000001', role: 'cocinero', restaurantId: 'rest-1' },
+            { firstName: 'María', lastName: 'López', email: 'camarero1@resttek.com', phone: '+34600000002', role: 'camarero', restaurantId: 'rest-1' },
+            { firstName: 'Pedro', lastName: 'Martínez', email: 'camarero2@resttek.com', phone: '+34600000003', role: 'camarero', restaurantId: 'rest-1' },
+            { firstName: 'Roberto', lastName: 'Díaz', email: 'gerente1@resttek.com', phone: '+34600000004', role: 'manager', restaurantId: 'rest-1' },
+            { firstName: 'Carlos', lastName: 'Sánchez', email: 'cocinero2@resttek.com', phone: '+34600000005', role: 'cocinero', restaurantId: 'rest-2' },
+            { firstName: 'Ana', lastName: 'Fernández', email: 'camarero3@resttek.com', phone: '+34600000006', role: 'camarero', restaurantId: 'rest-2' },
+            { firstName: 'Sofia', lastName: 'Rossi', email: 'gerente2@resttek.com', phone: '+34600000007', role: 'manager', restaurantId: 'rest-2' },
+            { firstName: 'Laura', lastName: 'Gómez', email: 'cliente1@resttek.com', phone: '+34600000008', role: 'cliente', restaurantId: null },
+            { firstName: 'Pablo', lastName: 'Ruiz', email: 'cliente2@resttek.com', phone: '+34600000009', role: 'cliente', restaurantId: null },
         ]
 
         for (const emp of employees) {
@@ -48,12 +49,13 @@ const seed = async () => {
                     firstName: emp.firstName,
                     lastName: emp.lastName,
                     email: emp.email,
+                    phone: emp.phone,
                     passwordHash: await authService.hashPassword(emp.email),
                     role: emp.role,
                     restaurantId: emp.restaurantId
                 })
                 await employeeRepo.save(employee)
-                console.log(`${emp.role} created: ${emp.email} / ${emp.email}`)
+                console.log(`${emp.role} created: ${emp.email} (${emp.phone}) / ${emp.email}`)
             } else {
                 console.log(`${emp.role} already exists: ${emp.email}`)
             }

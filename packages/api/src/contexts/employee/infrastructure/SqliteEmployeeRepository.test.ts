@@ -76,4 +76,54 @@ describe('SqliteEmployeeRepository (Integration)', () => {
         const found = await repo.findById('e1')
         expect(found).toBeNull()
     })
+
+    describe('phone', () => {
+        const build = (id: string, email: string, phone: string | null) =>
+            Employee.create({
+                id,
+                firstName: 'Pat',
+                lastName: 'Phone',
+                email,
+                phone,
+                passwordHash: 'hash',
+                role: 'camarero',
+                restaurantId: null
+            })
+
+        it('should save and retrieve the phone', async () => {
+            await repo.save(build('p1', 'p1@resttek.com', '+34 600 111 222'))
+            const found = await repo.findById('p1')
+            expect(found?.phone).toBe('+34600111222')
+        })
+
+        it('should keep phone null when not provided', async () => {
+            await repo.save(build('p2', 'p2@resttek.com', null))
+            const found = await repo.findById('p2')
+            expect(found?.phone).toBeNull()
+        })
+
+        it('should allow several employees without phone', async () => {
+            await repo.save(build('p3', 'p3@resttek.com', null))
+            expect(await repo.findById('p3')).not.toBeNull()
+        })
+
+        it('should update the phone of an existing employee', async () => {
+            await repo.save(build('p1', 'p1@resttek.com', '600333444'))
+            const found = await repo.findById('p1')
+            expect(found?.phone).toBe('600333444')
+        })
+
+        it('should find an employee by phone', async () => {
+            const found = await repo.findByPhone('600333444')
+            expect(found?.id).toBe('p1')
+        })
+
+        it('should return null when no employee has that phone', async () => {
+            expect(await repo.findByPhone('699999999')).toBeNull()
+        })
+
+        it('should reject a duplicated phone', async () => {
+            await expect(repo.save(build('p4', 'p4@resttek.com', '600333444'))).rejects.toThrow()
+        })
+    })
 })

@@ -23,7 +23,7 @@ npm test               # vitest de la API (única suite de tests del repo)
 - Un solo test: `cd packages/api && npx vitest run src/services/order.service.test.ts` (o `-t "nombre"`). Modo watch: `npm run test:watch` en `packages/api`.
 - Build de un frontend: `npm run build -w @resttek/web-admin` (idem para los otros). No hay lint configurado; los frontends no tienen tests.
 - Los frontends hacen proxy de `/api` a `localhost:3000` (`proxy.conf.json`). Cambios en `web-shared` requieren reiniciar el dev server.
-- Credenciales de seed: la contraseña de cada usuario es su email (p. ej. `admin@resttek.com`).
+- Credenciales de seed: la contraseña de cada usuario es su email (p. ej. `admin@resttek.com`). El login también acepta `{ phone, password }`; los usuarios del seed tienen teléfono `+34600000000` (admin) a `+34600000009`. El seed es `INSERT OR IGNORE` por email: una BD ya poblada no recibe los teléfonos, hay que recrearla.
 - `scripts/seed-issues.sh` crea issues de GitHub desde `scripts/issues.json` (`--dry-run` para simular).
 
 ## Arquitectura de la API (`packages/api/src`)

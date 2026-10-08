@@ -1,4 +1,5 @@
 import { Employee } from '@employee/domain/Employee.js'
+import { InvalidPhoneError } from '@errors/DomainErrors.js'
 import { describe, it, expect } from 'vitest'
 
 describe('Employee Entity (Domain)', () => {
@@ -82,5 +83,34 @@ describe('Employee Entity (Domain)', () => {
             role: 'manager',
             restaurantId: null
         })).toThrow('Password hash is required')
+    })
+
+    describe('phone', () => {
+        const base = {
+            id: 'p1',
+            firstName: 'Ana',
+            lastName: 'Lopez',
+            email: 'ana@resttek.com',
+            passwordHash: 'hash',
+            role: 'camarero',
+            restaurantId: 'r1'
+        }
+
+        it('should store a normalized phone', () => {
+            const employee = Employee.create({ ...base, phone: '+34 612 345 678' })
+            expect(employee.phone).toBe('+34612345678')
+        })
+
+        it('should default phone to null when omitted', () => {
+            expect(Employee.create(base).phone).toBeNull()
+        })
+
+        it('should accept an explicit null phone', () => {
+            expect(Employee.create({ ...base, phone: null }).phone).toBeNull()
+        })
+
+        it('should throw InvalidPhoneError for an invalid phone', () => {
+            expect(() => Employee.create({ ...base, phone: 'abc' })).toThrow(InvalidPhoneError)
+        })
     })
 })

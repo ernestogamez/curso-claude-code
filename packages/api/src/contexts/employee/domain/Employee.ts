@@ -1,4 +1,5 @@
 import { Email } from '@shared/domain/value-objects/Email.js'
+import { Phone } from '@shared/domain/value-objects/Phone.js'
 import { Role } from '@employee/domain/value-objects/Role.js'
 import type { EmployeeRoleType } from '@employee/domain/value-objects/Role.js'
 import { FirstNameRequiredError, LastNameRequiredError, PasswordHashRequiredError } from '@errors/DomainErrors.js'
@@ -8,6 +9,7 @@ export interface EmployeeProps {
     firstName: string
     lastName: string
     email: string
+    phone?: string | null
     passwordHash: string
     role: string
     restaurantId: string | null
@@ -18,6 +20,7 @@ export class Employee {
     private _firstName: string
     private _lastName: string
     private _email: Email
+    private _phone: Phone | null
     private _passwordHash: string
     private _role: Role
     private _restaurantId: string | null
@@ -27,6 +30,7 @@ export class Employee {
         firstName: string
         lastName: string
         email: Email
+        phone: Phone | null
         passwordHash: string
         role: Role
         restaurantId: string | null
@@ -35,6 +39,7 @@ export class Employee {
         this._firstName = props.firstName
         this._lastName = props.lastName
         this._email = props.email
+        this._phone = props.phone
         this._passwordHash = props.passwordHash
         this._role = props.role
         this._restaurantId = props.restaurantId
@@ -56,6 +61,7 @@ export class Employee {
             firstName: props.firstName,
             lastName: props.lastName,
             email: new Email(props.email),
+            phone: props.phone ? new Phone(props.phone) : null,
             passwordHash: props.passwordHash,
             role: new Role(props.role),
             restaurantId: props.restaurantId
@@ -66,6 +72,7 @@ export class Employee {
     get firstName(): string { return this._firstName }
     get lastName(): string { return this._lastName }
     get email(): string { return this._email.getValue() }
+    get phone(): string | null { return this._phone ? this._phone.getValue() : null }
     get passwordHash(): string { return this._passwordHash }
     get role(): EmployeeRoleType { return this._role.getValue() }
     get restaurantId(): string | null { return this._restaurantId }

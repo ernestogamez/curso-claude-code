@@ -2,12 +2,14 @@ import { randomUUID } from 'crypto'
 import { Employee } from '@employee/domain/Employee.js'
 import type { IEmployeeRepository } from '@employee/domain/IEmployeeRepository.js'
 import type { IAuthService } from '@employee/domain/IAuthService.js'
-import { DuplicatedEmailError } from '@errors/DomainErrors.js'
+import { Phone } from '@shared/domain/value-objects/Phone.js'
+import { DuplicatedEmailError, DuplicatedPhoneError } from '@errors/DomainErrors.js'
 
 export interface RegisterClientDTO {
     firstName: string
     lastName: string
     email: string
+    phone?: string | null
     password: string
 }
 
@@ -18,6 +20,7 @@ export interface RegisterClientResponse {
         firstName: string
         lastName: string
         email: string
+        phone: string | null
         role: string
         restaurantId: string | null
     }
@@ -35,6 +38,14 @@ export class RegisterClientUseCase {
             throw new DuplicatedEmailError()
         }
 
+        let phone: string | null = null
+        if (dto.phone) {
+            phone = new Phone(dto.phone).getValue()
+            if (await this.employeeRepo.findByPhone(phone)) {
+                throw new DuplicatedPhoneError()
+            }
+        }
+
         const passwordHash = await this.authService.hashPassword(dto.password)
 
         const employee = Employee.create({
@@ -42,6 +53,7 @@ export class RegisterClientUseCase {
             firstName: dto.firstName,
             lastName: dto.lastName,
             email: dto.email,
+            phone,
             passwordHash,
             role: 'cliente',
             restaurantId: null
@@ -62,6 +74,7 @@ export class RegisterClientUseCase {
                 firstName: employee.firstName,
                 lastName: employee.lastName,
                 email: employee.email,
+                phone: employee.phone,
                 role: employee.role,
                 restaurantId: employee.restaurantId
             }
