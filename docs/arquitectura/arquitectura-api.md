@@ -51,7 +51,7 @@ contexts/employee/
 
 `contexts/shared/` no es un bounded context de negocio: contiene el value object `Email` y los middlewares y el `errorHandler` de Express.
 
-### 2. Por capas → `restaurant`, `dish`, `ingredient`, `order`
+### 2. Por capas → `restaurant`, `dish`, `ingredient`, `table`, `order`
 
 El resto de dominios **no** usan bounded contexts. Se organizan en carpetas transversales por tipo de fichero:
 
@@ -177,7 +177,7 @@ export class CreateEmployeeUseCase {
 
 ### Servicios (resto de dominios)
 
-En `restaurant`, `dish`, `ingredient` y `order` el equivalente al caso de uso es un **servicio con varios métodos**, no una clase por acción:
+En `restaurant`, `dish`, `ingredient`, `table` y `order` el equivalente al caso de uso es un **servicio con varios métodos**, no una clase por acción:
 
 ```tsx
 export class RestaurantService {
@@ -310,6 +310,20 @@ Todos cuelgan de `/api/v1`. La columna **Roles** indica qué valores de `req.use
 
 Los ingredientes son **más restrictivos** que los platos: solo `admin` puede crear, editar o borrar.
 
+### Mesas
+
+| Método | Ruta | Roles |
+| --- | --- | --- |
+| `GET` | `/api/v1/restaurants/:restaurantId/tables` | admin, manager, camarero, cocinero, cliente — filtros `?status=` y `?minCapacity=`, ordenadas por `number` |
+| `GET` | `/api/v1/restaurants/:restaurantId/tables/:id` | admin, manager, camarero, cocinero, cliente |
+| `POST` | `/api/v1/restaurants/:restaurantId/tables` | admin — body `{ number, description, capacity, status? }` (`status` por defecto `libre`), 201 |
+| `PUT` | `/api/v1/restaurants/:restaurantId/tables/:id` | admin — body `{ number, description, capacity, status }` |
+| `DELETE` | `/api/v1/restaurants/:restaurantId/tables/:id` | admin — 204 |
+| `PATCH` | `/api/v1/restaurants/:restaurantId/tables/:id/status` | admin, manager, camarero — body `{ status }` |
+| `POST` | `/api/v1/restaurants/:restaurantId/tables/:id/occupy` | cliente — body `{ partySize }` |
+
+`POST .../occupy` solo ocupa una mesa `libre` (una `reservada` no se puede ocupar) a la que quepa `partySize`. La transición es atómica (`UPDATE ... WHERE status = 'libre'` en `occupyIfFree()`), de modo que de dos peticiones simultáneas solo una tiene éxito y la otra recibe 409. La mesa no se libera sola al entregar el pedido: el personal la cambia a `libre` con `PATCH .../status`.
+
 ### Pedidos
 
 | Método | Ruta | Roles |
@@ -319,6 +333,8 @@ Los ingredientes son **más restrictivos** que los platos: solo `admin` puede cr
 | `GET` | `/api/v1/orders/mine` | autenticado — pedidos del usuario del JWT |
 | `GET` | `/api/v1/orders/:id` | autenticado |
 | `PATCH` | `/api/v1/orders/:orderId/items/:itemId/status` | autenticado — devuelve 204 sin cuerpo |
+
+`POST /orders` acepta `tableId` opcional (`null` permitido). Si viene, la mesa debe existir **en el restaurante del pedido** (404 `TableNotFoundError`) y estar `ocupada` (409 `TableNotAvailableError`). Todas las lecturas y la respuesta de creación incluyen `tableId` y `tableNumber` (`null` si el pedido no tiene mesa o la mesa ya no existe), obtenido con `LEFT JOIN tables`.
 
 Ninguna ruta de pedidos aplica `authorize()`: cualquier usuario autenticado puede cambiar el estado de cualquier ítem.
 
@@ -345,9 +361,10 @@ Ambos responden directamente, sin pasar por el `errorHandler`.
 
 Jerarquía: `Error` → `AppError` (abstracta) → errores específicos en `errors/DomainErrors.ts`. `AppError` asigna `this.name = this.constructor.name`, y el `errorHandler` decide el código HTTP a partir de ese nombre:
 
-- **404**: `EmployeeNotFoundError`, `RestaurantNotFoundError`, `IngredientNotFoundError`, `DishNotFoundError`
+- **404**: `EmployeeNotFoundError`, `RestaurantNotFoundError`, `IngredientNotFoundError`, `DishNotFoundError`, `TableNotFoundError`
+- **409**: `TableNotAvailableError` (mesa no libre al ocuparla, o no ocupada al crear un pedido)
 - **401**: `InvalidCredentialsError`
-- **400**: cualquier otro `AppError`
+- **400**: cualquier otro `AppError` (incluidos `DuplicateTableNumberError`, `InvalidTableCapacityError` e `InvalidTableStatusError`)
 - **500**: errores no controlados
 
 Dos excepciones que conviene conocer:
@@ -400,6 +417,6 @@ La ruta del fichero se decide en el constructor: `:memory:` si `NODE_ENV=test`, 
 Con **Vitest** (`npm test` desde la raíz, o `npm run test:watch` dentro de `packages/api`). Los tests son unitarios y conviven con el código que prueban:
 
 - Dominio y casos de uso de `employee`, con dobles en `contexts/employee/application/mocks/`
-- Servicios y repositorios de `restaurant`, `ingredient` y `order`, con dobles en `repositories/mocks/`
+- Servicios y repositorios de `restaurant`, `ingredient`, `table` y `order`, con dobles en `repositories/mocks/`
 
 **No hay tests de integración HTTP.** `supertest` figura como dependencia de desarrollo pero no se usa en ningún test, así que las rutas, los middlewares y el `errorHandler` no están cubiertos.
