@@ -73,6 +73,7 @@ describe('OrderService.create (table validation)', () => {
         const order = await service.create({ restaurantId: 'rest-1', tableId: 't-occupied', clientId: 'c1', items })
 
         expect(order.tableId).toBe('t-occupied')
+        expect(order.tableNumber).toBe(1)
         expect(orderRepo.orders).toHaveLength(1)
     })
 
@@ -80,6 +81,7 @@ describe('OrderService.create (table validation)', () => {
         const order = await service.create({ restaurantId: 'rest-1', tableId: null, clientId: 'c1', items })
 
         expect(order.tableId).toBeNull()
+        expect(order.tableNumber).toBeNull()
     })
 
     it('should throw TableNotFoundError when the table does not exist', async () => {
