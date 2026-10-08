@@ -92,3 +92,36 @@
   width: 100%;
   text-transform: capitalize;
 }
+
+.table-orders {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.table-order {
+  margin-bottom: 10px;
+}
+
+.order-id {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 2px 0;
+}
+
+.no-orders {
+  font-size: 13px;
+  color: var(--text-muted);
+}

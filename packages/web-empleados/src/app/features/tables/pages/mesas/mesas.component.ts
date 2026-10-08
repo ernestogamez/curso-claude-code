@@ -1,6 +1,7 @@
 import { Component, inject, computed, OnInit, OnDestroy } from '@angular/core';
 import { AuthStore } from '@resttek/web-shared';
 import { TableStore } from '../../store/table.store';
+import { OrderStore } from '../../../orders/store/order.store';
 import { TableStatus } from '../../models/table.model';
 
 const STATUS_CHANGE_ROLES = ['admin', 'manager', 'camarero'];
@@ -14,6 +15,7 @@ const STATUS_CHANGE_ROLES = ['admin', 'manager', 'camarero'];
 export class MesasComponent implements OnInit, OnDestroy {
   private readonly authStore = inject(AuthStore);
   readonly tableStore = inject(TableStore);
+  private readonly orderStore = inject(OrderStore);
 
   readonly statuses: TableStatus[] = ['libre', 'ocupada', 'reservada'];
   readonly canChangeStatus = computed(() => STATUS_CHANGE_ROLES.includes(this.authStore.userRole() ?? ''));
@@ -26,11 +28,17 @@ export class MesasComponent implements OnInit, OnDestroy {
     const restaurantId = this.restaurantId;
     if (restaurantId) {
       this.tableStore.startPolling(restaurantId);
+      this.orderStore.startPolling(restaurantId);
     }
   }
 
   ngOnDestroy(): void {
     this.tableStore.stopPolling();
+    this.orderStore.stopPolling();
+  }
+
+  ordersFor(tableId: string) {
+    return this.orderStore.orders().filter(order => order.tableId === tableId);
   }
 
   changeStatus(tableId: string, event: Event): void {
