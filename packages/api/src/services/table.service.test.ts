@@ -7,6 +7,7 @@ import {
     DuplicateTableNumberError,
     InvalidTableCapacityError,
     InvalidTableStatusError,
+    TableNotAvailableError,
     RestaurantIdRequiredError
 } from '@errors/DomainErrors.js'
 
@@ -179,6 +180,53 @@ describe('TableService', () => {
 
         it('should throw TableNotFoundError when the table does not exist', async () => {
             await expect(service.changeStatus('missing', 'libre')).rejects.toThrow(TableNotFoundError)
+        })
+    })
+
+    describe('occupy', () => {
+        it('should occupy a free table that fits the party', async () => {
+            const created = await service.create(validDto)
+
+            const occupied = await service.occupy(created.id, 4)
+
+            expect(occupied.status).toBe('ocupada')
+            expect((await repo.findById(created.id))?.status).toBe('ocupada')
+        })
+
+        it('should throw TableNotFoundError when the table does not exist', async () => {
+            await expect(service.occupy('missing', 2)).rejects.toThrow(TableNotFoundError)
+        })
+
+        it('should throw InvalidTableCapacityError when the party does not fit', async () => {
+            const created = await service.create(validDto)
+            await expect(service.occupy(created.id, 5)).rejects.toThrow(InvalidTableCapacityError)
+            expect((await repo.findById(created.id))?.status).toBe('libre')
+        })
+
+        it.each([0, -1, 1.5, '2', null, undefined])('should reject invalid partySize %s', async (partySize) => {
+            const created = await service.create(validDto)
+            await expect(service.occupy(created.id, partySize as number)).rejects.toThrow(InvalidTableCapacityError)
+        })
+
+        it.each(['ocupada', 'reservada'])('should throw TableNotAvailableError for a %s table', async (status) => {
+            const created = await service.create({ ...validDto, status })
+            await expect(service.occupy(created.id, 2)).rejects.toThrow(TableNotAvailableError)
+        })
+
+        it('should throw TableNotAvailableError for a second occupation', async () => {
+            const created = await service.create(validDto)
+            await service.occupy(created.id, 2)
+            await expect(service.occupy(created.id, 2)).rejects.toThrow(TableNotAvailableError)
+        })
+
+        it('should let only one concurrent request win', async () => {
+            const created = await service.create(validDto)
+
+            const results = await Promise.allSettled([service.occupy(created.id, 2), service.occupy(created.id, 2)])
+
+            expect(results.filter(r => r.status === 'fulfilled')).toHaveLength(1)
+            const rejected = results.find(r => r.status === 'rejected') as PromiseRejectedResult
+            expect(rejected.reason).toBeInstanceOf(TableNotAvailableError)
         })
     })
 })

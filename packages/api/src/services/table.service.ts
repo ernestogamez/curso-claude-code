@@ -7,6 +7,7 @@ import {
     TableNumberRequiredError,
     DuplicateTableNumberError,
     InvalidTableCapacityError,
+    TableNotAvailableError,
     RestaurantIdRequiredError
 } from '@errors/DomainErrors.js'
 
@@ -94,6 +95,23 @@ export class TableService {
         }
         await this.tableRepository.save(updated)
         return updated
+    }
+
+    async occupy(id: string, partySize: number): Promise<Table> {
+        const table = await this.getById(id)
+
+        if (!Number.isInteger(partySize) || partySize < 1) {
+            throw new InvalidTableCapacityError('Party size must be an integer greater than or equal to 1')
+        }
+        if (partySize > table.capacity) {
+            throw new InvalidTableCapacityError(`Party size ${partySize} exceeds table capacity ${table.capacity}`)
+        }
+
+        const occupied = await this.tableRepository.occupyIfFree(id)
+        if (!occupied) {
+            throw new TableNotAvailableError()
+        }
+        return this.getById(id)
     }
 
     async delete(id: string): Promise<void> {
