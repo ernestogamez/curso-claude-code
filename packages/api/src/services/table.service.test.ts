@@ -169,7 +169,7 @@ describe('TableService', () => {
 
             const updated = await service.changeStatus(created.id, 'Reservada')
 
-            expect(updated).toMatchObject({ ...created, status: 'reservada' })
+            expect(updated).toMatchObject({ ...created, status: 'reservada', updatedAt: updated.updatedAt })
             expect((await repo.findById(created.id))?.status).toBe('reservada')
         })
 
