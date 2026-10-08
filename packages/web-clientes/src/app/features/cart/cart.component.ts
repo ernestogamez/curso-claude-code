@@ -45,6 +45,12 @@ import { OrderService } from '../../core/services/order.service'
 
           <aside class="order-summary card">
             <h3>Resumen</h3>
+            @if (cartStore.table(); as table) {
+              <div class="summary-row">
+                <span>Mesa</span>
+                <span>{{ table.tableNumber }}</span>
+              </div>
+            }
             <div class="summary-row">
               <span>Items ({{ cartStore.itemCount() }})</span>
               <span>{{ cartStore.total() | number:'1.2-2' }} €</span>
@@ -201,13 +207,15 @@ export class CartComponent {
     this.loading.set(true)
     this.error.set(null)
 
+    const tableId = this.cartStore.tableFor(restaurantId)?.tableId ?? null
+
     const items = this.cartStore.items().map(item => ({
       dishId: item.dish.id,
       quantity: item.quantity,
       notes: item.notes || null
     }))
 
-    this.orderService.createOrder(restaurantId, items).subscribe({
+    this.orderService.createOrder(restaurantId, tableId, items).subscribe({
       next: (order) => {
         this.cartStore.clear()
         this.router.navigate(['/orders', order.id])

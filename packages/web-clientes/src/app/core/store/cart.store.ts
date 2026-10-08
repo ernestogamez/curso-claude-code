@@ -17,13 +17,23 @@ export interface CartItem {
   notes: string
 }
 
+export interface SelectedTable {
+  restaurantId: string
+  tableId: string
+  tableNumber: number
+}
+
+const TABLE_STORAGE_PREFIX = 'resttek.table.'
+
 @Injectable({ providedIn: 'root' })
 export class CartStore {
   private readonly _items = signal<CartItem[]>([])
   private readonly _restaurantId = signal<string | null>(null)
+  private readonly _table = signal<SelectedTable | null>(null)
 
   readonly items = this._items.asReadonly()
   readonly restaurantId = this._restaurantId.asReadonly()
+  readonly table = this._table.asReadonly()
 
   readonly total = computed(() =>
     this._items().reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
@@ -36,6 +46,9 @@ export class CartStore {
   addItem(dish: Dish, quantity: number = 1, notes: string = ''): void {
     if (this._restaurantId() && this._restaurantId() !== dish.restaurantId) {
       this._items.set([])
+    }
+    if (this._table() && this._table()!.restaurantId !== dish.restaurantId) {
+      this._table.set(null)
     }
     this._restaurantId.set(dish.restaurantId)
 
@@ -77,5 +90,38 @@ export class CartStore {
   clear(): void {
     this._items.set([])
     this._restaurantId.set(null)
+  }
+
+  setTable(restaurantId: string, tableId: string, tableNumber: number): void {
+    if (this._restaurantId() && this._restaurantId() !== restaurantId) {
+      this.clear()
+    }
+    const table = { restaurantId, tableId, tableNumber }
+    this._table.set(table)
+    try {
+      sessionStorage.setItem(TABLE_STORAGE_PREFIX + restaurantId, JSON.stringify(table))
+    } catch {
+      // storage unavailable: the table only lives in memory
+    }
+  }
+
+  /** Returns the occupied table for the restaurant, rehydrating it from sessionStorage after a reload. */
+  tableFor(restaurantId: string): SelectedTable | null {
+    const current = this._table()
+    if (current?.restaurantId === restaurantId) return current
+    try {
+      const raw = sessionStorage.getItem(TABLE_STORAGE_PREFIX + restaurantId)
+      if (!raw) return null
+      const stored = JSON.parse(raw) as SelectedTable
+      if (stored.restaurantId !== restaurantId || !stored.tableId) return null
+      if (this._restaurantId() && this._restaurantId() !== restaurantId) {
+        this._items.set([])
+        this._restaurantId.set(null)
+      }
+      this._table.set(stored)
+      return stored
+    } catch {
+      return null
+    }
   }
 }

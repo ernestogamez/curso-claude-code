@@ -33,6 +33,9 @@ import { Order, OrderItem } from '../../core/models/order.model'
             }
             <span>{{ order()!.restaurantName || 'RestTek' }}</span>
           </div>
+          @if (order()!.tableNumber !== null && order()!.tableNumber !== undefined) {
+            <p class="ticket-table">Mesa {{ order()!.tableNumber }}</p>
+          }
           
           <div class="ticket-divider"></div>
 
@@ -96,6 +99,11 @@ import { Order, OrderItem } from '../../core/models/order.model'
       color: var(--green-light);
       font-size: 18px;
       font-weight: 700;
+    }
+    .ticket-table {
+      text-align: center;
+      color: var(--text-secondary);
+      margin-top: 8px;
     }
     .ticket-logo {
       width: 24px;
