@@ -19,7 +19,7 @@ Crea **un único commit** que siga la especificación [Conventional Commits 1.0.
 
 ### Pasos
 
-1. Si no hay cambios preparados, analiza los cambios sin preparar y añade con `git add` solo los archivos relacionados con un mismo cambio lógico. Nunca añadas archivos con secretos (`.env`, credenciales) ni la carpeta `data/`.
+1. Si no hay cambios preparados, analiza los cambios sin preparar y añade con `git add` solo los archivos relacionados con un mismo cambio lógico. Nunca añadas archivos con secretos (`.env`, credenciales) ni bases de datos locales como `packages/api/resttek.db`.
 2. Si los cambios mezclan propósitos distintos (por ejemplo, una funcionalidad y una refactorización sin relación), no los juntes: avisa y propón dividirlos en varios commits.
 3. Elige el tipo y el ámbito adecuados y redacta el mensaje.
 4. Ejecuta el commit con un heredoc para conservar el formato:
@@ -59,7 +59,7 @@ Crea **un único commit** que siga la especificación [Conventional Commits 1.0.
 | `chore`    | Tareas de mantenimiento que no tocan `src/` ni tests       |
 | `revert`   | Revierte un commit anterior                                |
 
-**Ámbitos sugeridos** (según la estructura del proyecto): `vendehumos`, `auth`, `db`, `models`, `validators`, `middleware`, `controllers`, `routes`, `config`, `crypto`. Omítelo si el cambio es transversal.
+**Ámbitos sugeridos** (paquetes del monorepo): `api`, `web-admin`, `web-empleados`, `web-clientes`, `web-shared`; también `docs`, `mcp` o `claude` para configuración. Omítelo si el cambio es transversal.
 
 **Reglas:**
 
@@ -67,26 +67,25 @@ Crea **un único commit** que siga la especificación [Conventional Commits 1.0.
 - Cuerpo opcional, separado por una línea en blanco: explica el **qué** y el **porqué**, no el cómo. Líneas de unos 72 caracteres.
 - Cambios incompatibles (por ejemplo, renombrar una ruta o un campo JSON del contrato público): añade `!` tras el tipo/ámbito **y** un pie `BREAKING CHANGE: <explicación>`.
 - Referencias a issues en el pie: `Refs: #123` o `Closes: #123`.
-- Termina el mensaje con la línea de atribución:
-  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
+- Termina el mensaje con la línea de coautoría que indique la configuración de la sesión.
 
 ### Ejemplos
 
 ```
-feat(vendehumos): add pagination to ranking endpoint
+feat(api): add pagination to the active orders endpoint
 ```
 
 ```
-fix(auth): reject expired sessions in require_auth
+fix(api): reject expired tokens in authenticate middleware
 
-Sessions past expira_en were still accepted because the comparison
-used seconds instead of milliseconds.
+Tokens past their expiration were still accepted because the
+comparison used seconds instead of milliseconds.
 ```
 
 ```
-feat(routes)!: rename /yo endpoint to /me
+feat(api)!: rename /orders/active query param to restaurantId
 
-BREAKING CHANGE: clients must call GET /auth/me instead of GET /auth/yo.
+BREAKING CHANGE: clients must send ?restaurantId= instead of ?restaurant=.
 ```
 
 Si `$ARGUMENTS` indica un tipo o ámbito, respétalo salvo que sea claramente incorrecto para los cambios (en ese caso, avisa). No hagas `git push` ni uses `--amend` o `--no-verify` salvo petición explícita.
