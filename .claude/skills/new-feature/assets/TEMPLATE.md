@@ -2,6 +2,7 @@
 
 | | |
 |---|---|
+| **Issue** | #<número> — <enlace> |
 | **Rama** | `<tipo>/<descripcion>` |
 | **Worktree** | `.claude/worktrees/<tipo>-<descripcion>` |
 | **Fecha** | AAAA-MM-DD |
